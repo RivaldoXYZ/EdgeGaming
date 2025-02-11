@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deployment Packages</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+        <h2>Pilih Paket Deployment</h2>
+        <form id="specForm">
+            <label for="package">Paket Resource:</label>
+            <select id="package" required>
+                <option value="tiny" data-cpu="500" data-memory="512" data-storage="1">
+                    Tiny (0.5vCPU / 512MB RAM / 1GB Disk)
+                </option>
+                <option value="small" data-cpu="1000" data-memory="1024" data-storage="5">
+                    Small (1vCPU / 1GB RAM / 5GB Disk)
+                </option>
+                <option value="medium" data-cpu="2000" data-memory="2048" data-storage="10">
+                    Medium (2vCPU / 2GB RAM / 10GB Disk)
+                </option>
+                <option value="large" data-cpu="4000" data-memory="4096" data-storage="20">
+                    Large (4vCPU / 4GB RAM / 20GB Disk)
+                </option>
+                <option value="xlarge" data-cpu="6000" data-memory="8192" data-storage="50">
+                    X-Large (6vCPU / 8GB RAM / 50GB Disk)
+                </option>
+                <option value="2xlarge" data-cpu="8000" data-memory="16384" data-storage="100">
+                    2X-Large (8vCPU / 16GB RAM / 100GB Disk)
+                </option>
+            </select>
+
+            <label for="software">Pre-Installed Software:</label>
+            <select id="software" required>
+                <option value="nginx">Nginx</option>
+                <option value="httpd">Apache</option>
+                <option value="python">Python</option>
+                <option value="node">Node.js</option>
+            </select>
+
+            <label for="node_label">Pilih Label Node:</label>
+            <select id="node_label" required>
+                <option value="best_performance">Best Performance</option>
+                <option value="best_cost">Best Cost</option>
+            </select>
+
+            <button type="submit">Deploy Sekarang</button>
+        </form>
+
+        <div id="yamlOutput" style="display:none; margin-top: 30px;">
+            <h3>Detail Deployment</h3>
+            <pre id="yamlResult"></pre>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('specForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            const packageSelect = document.getElementById('package');
+            const selectedPackage = packageSelect.options[packageSelect.selectedIndex];
+
+            const formData = {
+                cpu: selectedPackage.dataset.cpu,
+                memory: selectedPackage.dataset.memory,
+                storage: selectedPackage.dataset.storage,
+                software: document.getElementById('software').value,
+                node_label: document.getElementById('node_label').value
+            };
+
+            fetch('http://10.06.10.111:5001/deploy', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData),
+            })
+                .then(response => response.json())
+                .then(data => {
+                    const resultDiv = document.getElementById('yamlOutput');
+                    const resultPre = document.getElementById('yamlResult');
+
+                    if (data.status === 'success') {
+                        resultDiv.style.display = 'block';
+                        resultPre.textContent = `Deployment Name: ${data.details.deployment}\nCluster IP: ${data.details.cluster_ip}\nExternal IP: ${data.details.external_ip || 'N/A'}\nPort: ${data.details.port}\nLabels: ${JSON.stringify(data.details.labels, null, 2)}\nCredentials:\n  Username: ${data.details.credentials.username}\n  Password: ${data.details.credentials.password}`;
+                        resultPre.className = 'success';
+                    } else {
+                        resultDiv.style.display = 'block';
+                        resultPre.textContent = data.message;
+                        resultPre.className = 'error';
+                    }
+                })
+                .catch((error) => {
+                    alert('Terjadi kesalahan: ' + error.message);
+                    console.error('Error:', error);
+                });
+        });
+    </script>
+</body>
+
+</html>
