@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deployment Packages</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+    <div class="container">
+        <h2>Pilih Paket Deployment</h2>
+        <form id="specForm">
+            <label for="package">Paket Resource:</label>
+            <select id="package" required>
+                <option value="small">Small (6vCPU / 24GB RAM / 50GB Home / 400GB Games)</option>
+                <option value="medium">Medium (8vCPU / 32GB RAM / 100GB Home / 800GB Games)</option>
+                <option value="large">Large (12vCPU / 48GB RAM / 200GB Home / 1600GB Games)</option>
+            </select>
+
+            <button type="submit">Deploy Sekarang</button>
+        </form>
+
+        <div id="deploymentInfo" style="display:none; margin-top: 30px;">
+            <h3>Detail Deployment</h3>
+            <pre id="infoResult"></pre>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('specForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            const packageSelect = document.getElementById('package');
+            const selectedPackage = packageSelect.value;
+
+            const formData = { package: selectedPackage };
+
+            fetch('http://10.06.10.112:5001/deploy', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData),
+            })
+                .then(response => response.json())
+                .then(data => {
+                    const resultDiv = document.getElementById('deploymentInfo');
+                    const resultPre = document.getElementById('infoResult');
+
+                    if (data.status === 'success') {
+                        resultDiv.style.display = 'block';
+                        resultPre.textContent = `
+IP: ${data.ip}
+Port: ${data.port}
+Username: ${data.credentials.username}
+Password: ${data.credentials.password}
+URL noVNC: http://${data.ip}:${data.port}`;
+                    } else {
+                        resultDiv.style.display = 'block';
+                        resultPre.textContent = data.message;
+                    }
+                })
+                .catch((error) => {
+                    alert('Terjadi kesalahan: ' + error.message);
+                    console.error('Error:', error);
+                });
+        });
+    </script>
+</body>
+
+</html>

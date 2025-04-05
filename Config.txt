@@ -1,0 +1,6 @@
+MOONLIGHT SETTINGS : 
+- BITRATE UP TO 150Mb/s
+- Resolution 1080p; 144FPS
+- Set in task manager running realtime
+
+SUNSHINE SETTINGS :
